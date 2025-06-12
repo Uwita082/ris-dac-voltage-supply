@@ -71,6 +71,9 @@ class DAC2688:
 
         self._queue_write_commands = QueueChannelUpdate(self._no_daisy_chain, self._channels)
 
+    def close(self):
+        self._spi_protocol.close()
+
     def run(self):
         # Select input register B of all channels and write the code respective for 0 Volts to it
         self.set_register_b_to_zero()

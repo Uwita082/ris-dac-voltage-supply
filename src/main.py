@@ -6,5 +6,5 @@ if __name__ == '__main__':
     dac = DAC2688()
     dac.run()
 
-    while True:
-        time.sleep(1)
+    # while True:
+    #     time.sleep(1)

@@ -64,7 +64,7 @@ class DAC2688:
         self._spi_protocol = Protocol()
 
         self._resolution = 12
-        self._no_daisy_chain = 4
+        self._no_daisy_chain = 1
         self._channels = 16
 
         self._queue_write_commands = QueueChannelUpdate(self._no_daisy_chain, self._channels)
@@ -76,8 +76,8 @@ class DAC2688:
         #  The TGP0 pin is thus selected as the toggle clock input.
         self.set_settings_dac()
 
-        # # The channels now can be toggled
-        # self.enable_all_pins_toggle_mode()
+        # The channels now can be toggled
+        self.enable_all_pins_toggle_mode()
 
         self.set_values_dac(45, 0)
         self.set_values_dac(1, 2048)
@@ -230,26 +230,24 @@ class DAC2688:
 
     @staticmethod
     def _write_setting_to_channel(command: int, channel: int, mode: int, dit_ph: int, dit_per: int, td_sel: int, span: int) -> bytearray:
-        if not (0 <= command <= 15):
-            raise ValueError("Command number must be between 0 and 15.")
-        if not (0 <= channel <= 15):
-            raise ValueError("Command number must be between 0 and 15.")
-        if not (0 <= mode <= 1):
-            raise ValueError("Mode number must be between 0 and 1.")
-        if not (0 <= dit_ph <= 3):
-            raise ValueError("Dit_ph number must be between 0 and 3.")
-        if not (0 <= dit_per <= 7):
-            raise ValueError("Dit_per number must be between 0 and 7.")
-        if not (0 <= td_sel <= 3):
-            raise ValueError("Td_sel number must be between 0 and 7.")
-        if not (0 <= span <= 15):
-            raise ValueError("Span number must be between 0 and 7.")
+        # 2) pack the fields into a 12-bit value [11:0]
+        fields = (
+                ((command & 0xF) << 16) |
+                ((channel & 0xF) << 12) |
+                ((mode & 0x1) << 11) |
+                ((dit_ph & 0x3) << 9) |
+                ((dit_per & 0x7) << 6) |
+                ((td_sel & 0x3) << 4) |
+                ((span & 0xF) << 0)
+        ) << 12
 
-        command_code = (command << 4) | channel
-        byte1 = ((mode & 1) << 7) | ((dit_ph & 0b11) << 5) | ((dit_per & 0b111) << 2)
-        byte2 = ((td_sel & 0b11) << 6) | ((span & 0b1111) << 2)
+        # 4) break into three bytes (MSB first)
+        b1 = (fields >> 24) & 0xFF
+        b2 = (fields >> 16) & 0xFF
+        b3 = (fields >> 8) & 0xFF
+        b4 = (fields >> 0) & 0xFF
 
-        return bytearray([command_code, byte1, byte2, 0])
+        return bytearray([b1, b2, b3, b4])
 
 
     @staticmethod

@@ -1,5 +1,3 @@
-import time
-
 from src.protocol.protocol_interface import ProtocolInterface
 from src.protocol.protocol_mock import ProtocolMock
 from src.protocol.protocol_spidev import ProtocolSpiDev

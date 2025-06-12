@@ -1,0 +1,260 @@
+from math import floor
+from queue import Queue
+from typing import List, Optional
+
+from src.protocol.protocol_service import Protocol
+
+class ChannelValue:
+    channel_index: int
+    value_code: int
+
+    def __init__(self, channel_index: int, value_code: int):
+        self.channel_index = channel_index
+        self.value_code = value_code
+
+class QueueChannelUpdate:
+    _no_daisy_chain: int
+    _channels_daisy_chain: int
+    _queue_list: List[Queue[ChannelValue]]
+
+    def __init__(self, no_daisy_chain: int, channels_daisy_chain: int):
+        self._no_daisy_chain = no_daisy_chain
+        self._channels_daisy_chain = channels_daisy_chain
+
+        self._queue_list = []
+        for i in range(no_daisy_chain):
+            self._queue_list.append(Queue())
+
+    def register_command_write_channel(self, channel: int, value: int):
+        if not (0 <= channel < self._channels_daisy_chain * self._no_daisy_chain):
+            raise ValueError("The specified channel number must be a number between 0 and {}".format(self._channels_daisy_chain * self._no_daisy_chain - 1))
+
+        index: int = floor(channel / self._channels_daisy_chain)
+        channel_dac: int = channel % self._channels_daisy_chain
+
+        self._queue_list[index].put(ChannelValue(channel_dac, value))
+
+    def get_command_write(self) -> List[Optional[ChannelValue]]:
+        list_commands_daisy_chain: List[Optional[ChannelValue]] = []
+
+        for i in range(self._no_daisy_chain):
+            item: Optional[ChannelValue] = None
+
+            try:
+                item = self._queue_list[i].get(block=False)
+            except Exception as EmptyException:
+                item = None
+
+            list_commands_daisy_chain.append(item)
+
+
+        return list_commands_daisy_chain
+
+
+
+class DAC2688:
+    _spi_protocol: Protocol
+    _queue_write_commands: QueueChannelUpdate
+
+    _resolution: int
+    _no_daisy_chain: int
+    _channels: int
+
+    def __init__(self):
+        self._spi_protocol = Protocol()
+
+        self._resolution = 12
+        self._no_daisy_chain = 4
+        self._channels = 16
+
+        self._queue_write_commands = QueueChannelUpdate(self._no_daisy_chain, self._channels)
+
+    def run(self):
+        self.set_values_dac(45, 0)
+        self.set_values_dac(1, 2048)
+        self.set_values_dac(23, 3000)
+        self.set_values_dac(15, 4095)
+
+        self.write_all_values_dac()
+
+        # Select input register B of all channels and write the code respective for 0 Volts to it
+        self.set_register_b_to_zero()
+
+        #  The TGP0 pin is thus selected as the toggle clock input.
+        self.set_settings_dac()
+
+        # The channels now can be toggled
+        self.enable_all_pins_toggle_mode()
+
+    def set_register_b_to_zero(self) -> None:
+        code_zero: int = 2048
+
+        list_instructions: bytearray = bytearray([])
+
+        for i in range(self._no_daisy_chain):
+            list_instructions += (self._command_write_ab_select_register(4095))
+
+        self._spi_protocol.write(list_instructions)
+
+        list_instructions = bytearray([])
+
+        for i in range(self._no_daisy_chain):
+            list_instructions += (self._command_write_code_channel_all(code_zero))
+
+        self._spi_protocol.write(list_instructions)
+
+        list_instructions = bytearray([])
+
+        for i in range(self._no_daisy_chain):
+            list_instructions += (self._command_write_ab_select_register(0))
+
+        self._spi_protocol.write(list_instructions)
+
+
+    def set_settings_dac(self) -> None:
+        # Sets the span voltage between -15 and +15 Volts
+        # Sets TGP0 pin for toggle mode
+
+        list_instructions: bytearray = bytearray([])
+
+        for i in range(self._no_daisy_chain):
+            list_instructions += (self._command_write_setting_channel_all(0, 0, 0, 0b01, 0b0100))
+
+        self._spi_protocol.write(list_instructions)
+
+    def enable_all_pins_toggle_mode(self) -> None:
+        list_instructions: bytearray = bytearray([])
+
+        for i in range(self._no_daisy_chain):
+            list_instructions += (self._command_write_toggle_enable_register(4095))
+
+        self._spi_protocol.write(list_instructions)
+
+    def set_values_dac(self, channel: int, value: int) -> None:
+        if not (0 <= value <= 4095):
+            raise ValueError("Data must be in a 12-bit resolution representation.")
+
+        self._queue_write_commands.register_command_write_channel(channel, value)
+
+    def write_values_dac(self) -> None:
+        list_instructions: Optional[bytearray] = self._retrieve_write_commands()
+
+        if list_instructions is None:
+            return
+
+        self._spi_protocol.write(list_instructions)
+
+    def write_all_values_dac(self) -> None:
+        flag: bool = True
+        while flag:
+            list_instructions: Optional[bytearray] = self._retrieve_write_commands()
+            if list_instructions is None:
+                flag = False
+            else:
+                self._spi_protocol.write(list_instructions)
+
+    def _retrieve_write_commands(self) -> Optional[bytearray]:
+        list_write_commands: List[Optional[ChannelValue]] = self._queue_write_commands.get_command_write()
+        list_write_commands.reverse()
+
+        if len(list_write_commands) != self._no_daisy_chain:
+            raise ValueError("List of write commands should have the length of the number of daisy chain devices.")
+
+        list_instructions: bytearray = bytearray([])
+        flag: bool = False
+
+        for elem in list_write_commands:
+            if elem is None and not flag:
+                pass
+            elif elem is None:
+                list_instructions += self._no_operation()
+            else:
+                flag = True
+                list_instructions += self._command_write_code_channel(elem.channel_index, elem.value_code)
+
+        if not flag:
+            return None
+
+        return list_instructions
+
+    def _command_write_code_channel(self, channel: int, data: int) -> bytearray:                     # Command 0
+        return self._write_data_to_channel(0b0000, channel, data)
+
+    def _command_update_channel(self, channel: int) -> bytearray:                                    # Command 6
+        return self._write_data_to_channel(0b0110, channel, 0)
+
+    def _command_write_update_code_channel(self, channel: int, data: int) -> bytearray:              # Command 4
+        return self._write_data_to_channel(0b0100, channel, data)
+
+    def _command_write_code_channel_update_all(self, channel: int, data: int) -> bytearray:          # Command 5
+        return self._write_data_to_channel(0b0101, channel, data)
+
+    def _command_update_all_channels(self) -> bytearray:                                             # Command 18
+        return self._write_data_to_channel(0b0111, 0b1100, 0)
+
+    def _no_operation(self) -> bytearray:                                                            # Command 32
+        return self._write_data_to_channel(0b1111, 0b1111, 0)
+
+    def _command_write_setting_channel(self, channel: int, mode: int, dit_ph: int, dit_per: int, td_sel: int, span: int) -> bytearray:       # Command 1
+        return self._write_setting_to_channel(0b0001, channel, mode, dit_ph, dit_per, td_sel, span)
+
+    def _command_write_code_channel_all(self, data: int) -> bytearray:                               # Command 14
+        return self._write_data_to_channel(0b0111, 0b1000, data)
+
+    def _command_write_setting_channel_all(self, mode: int, dit_ph: int, dit_per: int, td_sel: int, span: int) -> bytearray:                 # Command 16
+        return self._write_setting_to_channel(0b0111, 0b1010, mode, dit_ph, dit_per, td_sel, span)
+
+    def _command_write_setting_update_channel_all(self, mode: int, dit_ph: int, dit_per: int, td_sel: int, span: int) -> bytearray:          # Command 17
+        return self._write_setting_to_channel(0b0111, 0b1011, mode, dit_ph, dit_per, td_sel, span)
+
+    def _command_write_ab_select_register(self, channels_selected: int) -> bytearray:                # Command 9
+        return self._write_data_to_channel(0b0111, 0b0010, channels_selected)
+
+    def _command_write_toggle_enable_register(self, channels_selected: int) -> bytearray:            # Command 11
+        return self._write_data_to_channel(0b0111, 0b0100, channels_selected)
+
+    @staticmethod
+    def _write_setting_to_channel(command: int, channel: int, mode: int, dit_ph: int, dit_per: int, td_sel: int, span: int) -> bytearray:
+        if not (0 <= command <= 15):
+            raise ValueError("Command number must be between 0 and 15.")
+        if not (0 <= channel <= 15):
+            raise ValueError("Command number must be between 0 and 15.")
+        if not (0 <= mode <= 1):
+            raise ValueError("Mode number must be between 0 and 1.")
+        if not (0 <= dit_ph <= 3):
+            raise ValueError("Dit_ph number must be between 0 and 3.")
+        if not (0 <= dit_per <= 7):
+            raise ValueError("Dit_per number must be between 0 and 7.")
+        if not (0 <= td_sel <= 3):
+            raise ValueError("Td_sel number must be between 0 and 7.")
+        if not (0 <= span <= 15):
+            raise ValueError("Span number must be between 0 and 7.")
+
+        command_code = (command << 4) | channel
+        byte1 = ((mode & 1) << 7) | ((dit_ph & 0b11) << 5) | ((dit_per & 0b111) << 2)
+        byte2 = ((td_sel & 0b11) << 6) | ((span & 0b1111) << 2)
+
+        return bytearray([command_code, byte1, byte2, 0])
+
+
+    @staticmethod
+    def _write_data_to_channel(command: int, channel: int, data: int):
+        if not (0 <= command <= 15):
+            raise ValueError("Command number must be between 0 and 15.")
+
+        if not (0 <= channel <= 15):
+            raise ValueError("Channel number must be between 0 and 15.")
+
+        if not (0 <= data <= 4095):
+            raise ValueError("Data must be in a 12-bit resolution representation.")
+
+        command_code = (command << 4) | channel
+
+        data_code = data << 12
+
+        return bytearray([
+            command_code,
+            (data_code >> 16) & 0xFF,  # Most significant byte
+            (data_code >> 8) & 0xFF,  # Middle byte
+            data_code & 0xFF  # Least significant byte
+        ])

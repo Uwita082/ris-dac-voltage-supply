@@ -3,6 +3,8 @@ from queue import Queue
 from typing import List, Optional
 
 from src.protocol.protocol_service import Protocol
+from src.utils.math import map_value
+
 
 class ChannelValue:
     channel_index: int
@@ -64,25 +66,23 @@ class DAC2688:
         self._spi_protocol = Protocol()
 
         self._resolution = 12
-        self._no_daisy_chain = 1
+        self._no_daisy_chain = 4
         self._channels = 16
 
         self._queue_write_commands = QueueChannelUpdate(self._no_daisy_chain, self._channels)
 
     def run(self):
         # Select input register B of all channels and write the code respective for 0 Volts to it
-        # self.set_register_b_to_zero()
+        self.set_register_b_to_zero()
 
-        #  The TGP0 pin is thus selected as the toggle clock input.
+        # The TGP0 pin is thus selected as the toggle clock input.
         self.set_settings_dac()
 
         # The channels now can be toggled
         self.enable_all_pins_toggle_mode()
 
-        self.set_values_dac(45, 0)
-        self.set_values_dac(1, 2048)
-        self.set_values_dac(23, 3000)
-        self.set_values_dac(15, 4095)
+        for i in range(10, 64):
+            self.set_values_dac(i, map_value(i, 10, 63, 0, 4095))
 
         self.write_all_values_dac()
 
@@ -111,6 +111,8 @@ class DAC2688:
 
         self._spi_protocol.write(list_instructions)
 
+        list_instructions = bytearray([])
+
         for i in range(self._no_daisy_chain):
             list_instructions += (self._command_update_all_channels())
 
@@ -123,9 +125,6 @@ class DAC2688:
 
         self._spi_protocol.write(list_instructions)
 
-
-
-
     def set_settings_dac(self) -> None:
         # Sets the span voltage between -15 and +15 Volts
         # Sets TGP0 pin for toggle mode
@@ -133,7 +132,7 @@ class DAC2688:
         list_instructions: bytearray = bytearray([])
 
         for i in range(self._no_daisy_chain):
-            list_instructions += (self._command_write_setting_channel_all(0, 0, 0, 0b01, 0b0001))
+            list_instructions += (self._command_write_setting_channel_all(0, 0, 0, 0b01, 0b0100))
 
         self._spi_protocol.write(list_instructions)
 

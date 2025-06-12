@@ -70,6 +70,15 @@ class DAC2688:
         self._queue_write_commands = QueueChannelUpdate(self._no_daisy_chain, self._channels)
 
     def run(self):
+        # Select input register B of all channels and write the code respective for 0 Volts to it
+        # self.set_register_b_to_zero()
+
+        #  The TGP0 pin is thus selected as the toggle clock input.
+        self.set_settings_dac()
+
+        # # The channels now can be toggled
+        # self.enable_all_pins_toggle_mode()
+
         self.set_values_dac(45, 0)
         self.set_values_dac(1, 2048)
         self.set_values_dac(23, 3000)
@@ -77,14 +86,13 @@ class DAC2688:
 
         self.write_all_values_dac()
 
-        # Select input register B of all channels and write the code respective for 0 Volts to it
-        self.set_register_b_to_zero()
+    def update_all_channels(self) -> None:
+        list_instructions: bytearray = bytearray([])
 
-        #  The TGP0 pin is thus selected as the toggle clock input.
-        self.set_settings_dac()
+        for i in range(self._no_daisy_chain):
+            list_instructions += (self._command_update_all_channels())
 
-        # The channels now can be toggled
-        self.enable_all_pins_toggle_mode()
+        self._spi_protocol.write(list_instructions)
 
     def set_register_b_to_zero(self) -> None:
         code_zero: int = 2048
@@ -103,12 +111,19 @@ class DAC2688:
 
         self._spi_protocol.write(list_instructions)
 
+        for i in range(self._no_daisy_chain):
+            list_instructions += (self._command_update_all_channels())
+
+        self._spi_protocol.write(list_instructions)
+
         list_instructions = bytearray([])
 
         for i in range(self._no_daisy_chain):
             list_instructions += (self._command_write_ab_select_register(0))
 
         self._spi_protocol.write(list_instructions)
+
+
 
 
     def set_settings_dac(self) -> None:
@@ -118,7 +133,7 @@ class DAC2688:
         list_instructions: bytearray = bytearray([])
 
         for i in range(self._no_daisy_chain):
-            list_instructions += (self._command_write_setting_channel_all(0, 0, 0, 0b01, 0b0100))
+            list_instructions += (self._command_write_setting_channel_all(0, 0, 0, 0b01, 0b0001))
 
         self._spi_protocol.write(list_instructions)
 
@@ -170,7 +185,7 @@ class DAC2688:
                 list_instructions += self._no_operation()
             else:
                 flag = True
-                list_instructions += self._command_write_code_channel(elem.channel_index, elem.value_code)
+                list_instructions += self._command_write_update_code_channel(elem.channel_index, elem.value_code)
 
         if not flag:
             return None

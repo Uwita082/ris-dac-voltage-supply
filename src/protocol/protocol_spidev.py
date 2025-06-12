@@ -13,8 +13,8 @@ class ProtocolSpiDev(ProtocolInterface):
         self.spi = spidev.SpiDev()
 
     def open(self) -> None:
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self.cs_pin, GPIO.OUT, initial=GPIO.HIGH)  # CS inactive initially
+        # GPIO.setmode(GPIO.BCM)
+        # GPIO.setup(self.cs_pin, GPIO.OUT, initial=GPIO.HIGH)  # CS inactive initially
         self.spi.open(self.bus, self.device)
         self.spi.max_speed_hz = self.max_speed_hz
         self.spi.mode = 0b00  # Adjust if needed
@@ -24,8 +24,9 @@ class ProtocolSpiDev(ProtocolInterface):
         GPIO.cleanup(self.cs_pin)
 
     def set_cs(self, value: bool) -> None:
+        pass
         # Active-low logic: CS LOW to enable
-        GPIO.output(self.cs_pin, GPIO.LOW if value else GPIO.HIGH)
+        # GPIO.output(self.cs_pin, GPIO.LOW if value else GPIO.HIGH)
 
     def write(self, byte_list: bytearray) -> None:
         self.spi.xfer2(list(byte_list))

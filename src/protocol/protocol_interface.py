@@ -11,9 +11,5 @@ class ProtocolInterface(ABC):
         pass
 
     @abstractmethod
-    def set_cs(self, value: bool) -> None:
-        pass
-
-    @abstractmethod
     def write(self, byte_list: bytearray)  -> None:
         pass

@@ -8,9 +8,6 @@ class ProtocolMock(ProtocolInterface):
     def close(self) -> None:
         pass
 
-    def set_cs(self, value: bool) -> None:
-        pass
-
     def write(self, byte_list: bytearray)  -> None:
         print(byte_list)
         bits = ''.join(f'{byte:08b}' for byte in byte_list)

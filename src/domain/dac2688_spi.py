@@ -112,13 +112,15 @@ class DAC2688:
         # self.set_register_b_to_zero()
 
         # The TGP0 pin is thus selected as the toggle clock input.
-        # self.set_settings_dac()
+        self.set_settings_dac()
 
         # The channels now can be toggled
         # self.enable_all_pins_toggle_mode()
 
-        self.set_setting_dac(63, 0b0, 0b00, 0b000, 0b00, 0b0010)
-        self.set_values_dac(63, 4095)
+        # self.set_setting_dac(63, 0b0, 0b00, 0b000, 0b00, 0b0010)
+        self.set_values_dac(40, 0)
+        self.set_values_dac(41, 2048)
+        self.set_values_dac(42, 4095)
 
         # for i in range(10, 64):
         #     self.set_values_dac(i, map_value(i, 10, 63, 0, 4095))
@@ -288,14 +290,14 @@ class DAC2688:
     def _write_setting_to_channel(command: int, channel: int, mode: int, dit_ph: int, dit_per: int, td_sel: int, span: int) -> bytearray:
         # 2) pack the fields into a 12-bit value [11:0]
         fields = (
-                ((command & 0xF) << 16) |
-                ((channel & 0xF) << 12) |
+                ((command & 0xF) << 20) |
+                ((channel & 0xF) << 16) |
                 ((mode & 0x1) << 11) |
                 ((dit_ph & 0x3) << 9) |
                 ((dit_per & 0x7) << 6) |
                 ((td_sel & 0x3) << 4) |
                 ((span & 0xF) << 0)
-        ) << 12
+        ) << 8
 
         # 4) break into three bytes (MSB first)
         b1 = (fields >> 24) & 0xFF

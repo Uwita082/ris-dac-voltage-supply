@@ -19,7 +19,6 @@ class ProtocolSpiDev(ProtocolInterface):
 
     def close(self) -> None:
         self.spi.close()
-        GPIO.cleanup(self.cs_pin)
 
     def write(self, byte_list: bytearray) -> None:
         self.spi.xfer2(list(byte_list))

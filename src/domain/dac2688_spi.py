@@ -1,94 +1,7 @@
-import time
-from abc import ABC, abstractmethod
-from enum import Enum
-from math import floor
-from queue import Queue
 from typing import List, Optional
 
+from src.domain.dac_2688_channel import QueueChannelUpdate, ChannelSettingValue, ChannelWriteValue, ChannelValue
 from src.protocol.protocol_service import Protocol
-from src.utils.math import map_value
-
-
-class OperationChannel(Enum):
-    WRITE = 1
-    SETTING = 2
-
-class ChannelValue(ABC):
-    channel_index: int
-
-    @abstractmethod
-    def __init__(self, channel_index: int):
-        self.channel_index = channel_index
-
-class ChannelWriteValue(ChannelValue):
-    value_code: int
-
-    def __init__(self, channel_index: int, value_code: int):
-        super().__init__(channel_index)
-        self.value_code = value_code
-
-class ChannelSettingValue(ChannelValue):
-    mode: int
-    dit_ph: int
-    dit_per: int
-    td_sel: int
-    span: int
-
-    def __init__(self, channel_index: int, mode: int, dit_ph: int, dit_per: int, td_sel: int, span: int):
-        super().__init__(channel_index)
-        self.mode = mode
-        self.dit_ph = dit_ph
-        self.dit_per = dit_per
-        self.td_sel = td_sel
-        self.span = span
-
-
-class QueueChannelUpdate:
-    _no_daisy_chain: int
-    _channels_daisy_chain: int
-    _queue_list: List[Queue[ChannelValue]]
-
-    def __init__(self, no_daisy_chain: int, channels_daisy_chain: int):
-        self._no_daisy_chain = no_daisy_chain
-        self._channels_daisy_chain = channels_daisy_chain
-
-        self._queue_list = []
-        for i in range(no_daisy_chain):
-            self._queue_list.append(Queue())
-
-    def register_command_write_channel(self, channel: int, value: int):
-        if not (0 <= channel < self._channels_daisy_chain * self._no_daisy_chain):
-            raise ValueError("The specified channel number must be a number between 0 and {}".format(self._channels_daisy_chain * self._no_daisy_chain - 1))
-
-        index: int = floor(channel / self._channels_daisy_chain)
-        channel_dac: int = channel % self._channels_daisy_chain
-
-        self._queue_list[index].put(ChannelWriteValue(channel_dac, value))
-
-    def register_command_setting_channel(self, channel: int, mode: int, dit_ph: int, dit_per: int, td_sel: int, span: int):
-        if not (0 <= channel < self._channels_daisy_chain * self._no_daisy_chain):
-            raise ValueError("The specified channel number must be a number between 0 and {}".format(self._channels_daisy_chain * self._no_daisy_chain - 1))
-
-        index: int = floor(channel / self._channels_daisy_chain)
-        channel_dac: int = channel % self._channels_daisy_chain
-
-        self._queue_list[index].put(ChannelSettingValue(channel_dac, mode, dit_ph, dit_per, td_sel, span))
-
-    def get_command_write(self) -> List[Optional[ChannelValue]]:
-        list_commands_daisy_chain: List[Optional[ChannelValue]] = []
-
-        for i in range(self._no_daisy_chain):
-            try:
-                item = self._queue_list[i].get(block=False)
-            except Exception as EmptyException:
-                item = None
-
-            list_commands_daisy_chain.append(item)
-
-
-        return list_commands_daisy_chain
-
-
 
 class DAC2688:
     _spi_protocol: Protocol
@@ -195,7 +108,7 @@ class DAC2688:
         list_instructions: bytearray = bytearray([])
 
         for i in range(self._no_daisy_chain):
-            list_instructions += (self._command_write_setting_channel(channel, 0, 0, 0b00, 0b0100))
+            list_instructions += (self._command_write_setting_channel(channel, 0, 0, 0b00, 0b01, 0b0100))
 
         self._spi_protocol.write(list_instructions)
 
@@ -335,7 +248,7 @@ class DAC2688:
         fields = (
                          ((command & 0xF) << 20) |
                          ((channel & 0xF) << 16) |
-                         ((data & 0xFFF) << 0)
+                         ((data & 0xFFFF) << 0)
                  ) << 8
 
         # 4) break into three bytes (MSB first)

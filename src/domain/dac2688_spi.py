@@ -1,18 +1,44 @@
+from abc import ABC, abstractmethod
+from enum import Enum
 from math import floor
 from queue import Queue
 from typing import List, Optional
 
 from src.protocol.protocol_service import Protocol
-from src.utils.math import map_value
 
+class OperationChannel(Enum):
+    WRITE = 1
+    SETTING = 2
 
-class ChannelValue:
+class ChannelValue(ABC):
     channel_index: int
+
+    @abstractmethod
+    def __init__(self, channel_index: int):
+        self.channel_index = channel_index
+
+class ChannelWriteValue(ChannelValue):
     value_code: int
 
     def __init__(self, channel_index: int, value_code: int):
-        self.channel_index = channel_index
+        super().__init__(channel_index)
         self.value_code = value_code
+
+class ChannelSettingValue(ChannelValue):
+    mode: int
+    dit_ph: int
+    dit_per: int
+    td_sel: int
+    span: int
+
+    def __init__(self, channel_index: int, mode: int, dit_ph: int, dit_per: int, td_sel: int, span: int):
+        super().__init__(channel_index)
+        self.mode = mode
+        self.dit_ph = dit_ph
+        self.dit_per = dit_per
+        self.td_sel = td_sel
+        self.span = span
+
 
 class QueueChannelUpdate:
     _no_daisy_chain: int
@@ -34,14 +60,21 @@ class QueueChannelUpdate:
         index: int = floor(channel / self._channels_daisy_chain)
         channel_dac: int = channel % self._channels_daisy_chain
 
-        self._queue_list[index].put(ChannelValue(channel_dac, value))
+        self._queue_list[index].put(ChannelWriteValue(channel_dac, value))
+
+    def register_command_setting_channel(self, channel: int, mode: int, dit_ph: int, dit_per: int, td_sel: int, span: int):
+        if not (0 <= channel < self._channels_daisy_chain * self._no_daisy_chain):
+            raise ValueError("The specified channel number must be a number between 0 and {}".format(self._channels_daisy_chain * self._no_daisy_chain - 1))
+
+        index: int = floor(channel / self._channels_daisy_chain)
+        channel_dac: int = channel % self._channels_daisy_chain
+
+        self._queue_list[index].put(ChannelSettingValue(channel_dac, mode, dit_ph, dit_per, td_sel, span))
 
     def get_command_write(self) -> List[Optional[ChannelValue]]:
         list_commands_daisy_chain: List[Optional[ChannelValue]] = []
 
         for i in range(self._no_daisy_chain):
-            item: Optional[ChannelValue] = None
-
             try:
                 item = self._queue_list[i].get(block=False)
             except Exception as EmptyException:
@@ -79,17 +112,18 @@ class DAC2688:
         # self.set_register_b_to_zero()
 
         # The TGP0 pin is thus selected as the toggle clock input.
-        self.set_settings_dac()
+        # self.set_settings_dac()
 
         # The channels now can be toggled
         # self.enable_all_pins_toggle_mode()
 
+        self.set_setting_dac(63, 0b0, 0b00, 0b000, 0b00, 0b0010)
         self.set_values_dac(63, 4095)
 
         # for i in range(10, 64):
         #     self.set_values_dac(i, map_value(i, 10, 63, 0, 4095))
         #
-        # self.write_all_values_dac()
+        self.write_all_values_dac()
 
     def update_all_channels(self) -> None:
         list_instructions: bytearray = bytearray([])
@@ -137,9 +171,18 @@ class DAC2688:
         list_instructions: bytearray = bytearray([])
 
         for i in range(self._no_daisy_chain):
-            list_instructions += (self._command_write_setting_update_channel_all(0, 0, 0, 0b01, 0b0100))
+            list_instructions += (self._command_write_setting_update_channel_all(0, 0, 0, 0b00, 0b0100))
 
         self._spi_protocol.write(list_instructions)
+
+    def set_settings_dac_channel(self, channel) -> None:
+        list_instructions: bytearray = bytearray([])
+
+        for i in range(self._no_daisy_chain):
+            list_instructions += (self._command_write_setting_channel(channel, 0, 0, 0b00, 0b0100))
+
+        self._spi_protocol.write(list_instructions)
+
 
     def enable_all_pins_toggle_mode(self) -> None:
         list_instructions: bytearray = bytearray([])
@@ -154,6 +197,9 @@ class DAC2688:
             raise ValueError("Data must be in a 12-bit resolution representation.")
 
         self._queue_write_commands.register_command_write_channel(channel, value)
+
+    def set_setting_dac(self, channel: int, mode: int, dit_ph: int, dit_per: int, td_sel: int, span: int):
+        self._queue_write_commands.register_command_setting_channel(channel, mode, dit_ph, dit_per, td_sel, span)
 
     def write_values_dac(self) -> None:
         list_instructions: Optional[bytearray] = self._retrieve_write_commands()
@@ -189,7 +235,13 @@ class DAC2688:
                 list_instructions += self._no_operation()
             else:
                 flag = True
-                list_instructions += self._command_write_update_code_channel(elem.channel_index, elem.value_code)
+
+                if isinstance(elem, ChannelWriteValue):
+                    list_instructions += self._command_write_update_code_channel(elem.channel_index, elem.value_code)
+                elif isinstance(elem, ChannelSettingValue):
+                    list_instructions += self._command_write_setting_channel(elem.channel_index, elem.mode, elem.dit_ph, elem.dit_per, elem.td_sel, elem.span)
+                else:
+                    list_instructions += self._no_operation()
 
         if not flag:
             return None

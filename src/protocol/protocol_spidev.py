@@ -5,7 +5,7 @@ from src.protocol.protocol_interface import ProtocolInterface
 
 
 class ProtocolSpiDev(ProtocolInterface):
-    def __init__(self, bus: int = 0, device: int = 0, max_speed_hz: int = 25000000, cs_pin: int = 8):
+    def __init__(self, bus: int = 0, device: int = 0, max_speed_hz: int = 30000000, cs_pin: int = 8):
         self.bus = bus
         self.device = device
         self.max_speed_hz = max_speed_hz

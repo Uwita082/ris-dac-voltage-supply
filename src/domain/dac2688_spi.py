@@ -1,3 +1,4 @@
+import time
 from abc import ABC, abstractmethod
 from enum import Enum
 from math import floor
@@ -5,6 +6,8 @@ from queue import Queue
 from typing import List, Optional
 
 from src.protocol.protocol_service import Protocol
+from src.utils.math import map_value
+
 
 class OperationChannel(Enum):
     WRITE = 1
@@ -117,15 +120,18 @@ class DAC2688:
         # The channels now can be toggled
         # self.enable_all_pins_toggle_mode()
 
-        # self.set_setting_dac(63, 0b0, 0b00, 0b000, 0b00, 0b0010)
-        self.set_values_dac(40, 0)
-        self.set_values_dac(41, 2048)
-        self.set_values_dac(42, 4095)
 
-        # for i in range(10, 64):
-        #     self.set_values_dac(i, map_value(i, 10, 63, 0, 4095))
-        #
-        self.write_all_values_dac()
+        while True:
+            # for i in range(10, 64):
+            #     self.set_values_dac(i, map_value(i, 10, 63, 0, 4095))
+            #
+            # for i in range(10, 64):
+            #     self.set_values_dac(i, map_value(i, 10, 63, 4095, 0))
+
+            self.set_values_dac(0, 0)
+            self.set_values_dac(0, 4095)
+
+            self.write_all_values_dac()
 
     def update_all_channels(self) -> None:
         list_instructions: bytearray = bytearray([])

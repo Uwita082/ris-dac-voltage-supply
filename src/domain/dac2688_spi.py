@@ -112,26 +112,34 @@ class DAC2688:
 
     def run(self):
         # Select input register B of all channels and write the code respective for 0 Volts to it
-        # self.set_register_b_to_zero()
+        self.set_register_b_to_zero()
 
         # The TGP0 pin is thus selected as the toggle clock input.
         self.set_settings_dac()
 
         # The channels now can be toggled
-        # self.enable_all_pins_toggle_mode()
+        self.enable_all_pins_toggle_mode()
 
+        # self.set_setting_dac(2, 0b0, 0b00, 0b000, 0b01, 0b0010)
+        # self.set_values_dac(2, 1000)
+        # self.write_all_values_dac()
 
-        while True:
-            # for i in range(10, 64):
-            #     self.set_values_dac(i, map_value(i, 10, 63, 0, 4095))
-            #
-            # for i in range(10, 64):
-            #     self.set_values_dac(i, map_value(i, 10, 63, 4095, 0))
-
-            self.set_values_dac(0, 0)
-            self.set_values_dac(0, 4095)
-
-            self.write_all_values_dac()
+        # while True:
+        #     # for i in range(10, 64):
+        #     #     self.set_values_dac(i, map_value(i, 10, 63, 0, 4095))
+        #     #
+        #     # # self.write_all_values_dac()
+        #     #
+        #     # for i in range(10, 64):
+        #     #     self.set_values_dac(i, map_value(i, 10, 63, 4095, 0))
+        #
+        #     self.set_values_dac(0, 0)
+        #     self.write_all_values_dac()
+        #     time.sleep(1)
+        #     self.set_values_dac(0, 4095)
+        #
+        #     self.write_all_values_dac()
+        #     time.sleep(1)
 
     def update_all_channels(self) -> None:
         list_instructions: bytearray = bytearray([])
@@ -147,7 +155,7 @@ class DAC2688:
         list_instructions: bytearray = bytearray([])
 
         for i in range(self._no_daisy_chain):
-            list_instructions += (self._command_write_ab_select_register(4095))
+            list_instructions += (self._command_write_ab_select_register(65535))
 
         self._spi_protocol.write(list_instructions)
 
@@ -179,7 +187,7 @@ class DAC2688:
         list_instructions: bytearray = bytearray([])
 
         for i in range(self._no_daisy_chain):
-            list_instructions += (self._command_write_setting_update_channel_all(0, 0, 0, 0b00, 0b0100))
+            list_instructions += (self._command_write_setting_update_channel_all(0, 0, 0, 0b01, 0b0100))
 
         self._spi_protocol.write(list_instructions)
 
@@ -196,7 +204,7 @@ class DAC2688:
         list_instructions: bytearray = bytearray([])
 
         for i in range(self._no_daisy_chain):
-            list_instructions += (self._command_write_toggle_enable_register(4095))
+            list_instructions += (self._command_write_toggle_enable_register(65535))
 
         self._spi_protocol.write(list_instructions)
 
@@ -287,10 +295,10 @@ class DAC2688:
         return self._write_setting_to_channel(0b0111, 0b1011, mode, dit_ph, dit_per, td_sel, span)
 
     def _command_write_ab_select_register(self, channels_selected: int) -> bytearray:                # Command 9
-        return self._write_data_to_channel(0b0111, 0b0010, channels_selected)
+        return self._write_data_setting_to_channel(0b0111, 0b0010, channels_selected)
 
     def _command_write_toggle_enable_register(self, channels_selected: int) -> bytearray:            # Command 11
-        return self._write_data_to_channel(0b0111, 0b0100, channels_selected)
+        return self._write_data_setting_to_channel(0b0111, 0b0100, channels_selected)
 
     @staticmethod
     def _write_setting_to_channel(command: int, channel: int, mode: int, dit_ph: int, dit_per: int, td_sel: int, span: int) -> bytearray:
@@ -304,6 +312,31 @@ class DAC2688:
                 ((td_sel & 0x3) << 4) |
                 ((span & 0xF) << 0)
         ) << 8
+
+        # 4) break into three bytes (MSB first)
+        b1 = (fields >> 24) & 0xFF
+        b2 = (fields >> 16) & 0xFF
+        b3 = (fields >> 8) & 0xFF
+        b4 = (fields >> 0) & 0xFF
+
+        return bytearray([b1, b2, b3, b4])
+
+    @staticmethod
+    def _write_data_setting_to_channel(command: int, channel: int, data: int):
+        if not (0 <= command <= 15):
+            raise ValueError("Command number must be between 0 and 15.")
+
+        if not (0 <= channel <= 15):
+            raise ValueError("Channel number must be between 0 and 15.")
+
+        if not (0 <= data <= 65535):
+            raise ValueError("Data must be in a 16-bit resolution representation.")
+
+        fields = (
+                         ((command & 0xF) << 20) |
+                         ((channel & 0xF) << 16) |
+                         ((data & 0xFFF) << 0)
+                 ) << 8
 
         # 4) break into three bytes (MSB first)
         b1 = (fields >> 24) & 0xFF

@@ -76,18 +76,20 @@ class DAC2688:
 
     def run(self):
         # Select input register B of all channels and write the code respective for 0 Volts to it
-        self.set_register_b_to_zero()
+        # self.set_register_b_to_zero()
 
         # The TGP0 pin is thus selected as the toggle clock input.
         self.set_settings_dac()
 
         # The channels now can be toggled
-        self.enable_all_pins_toggle_mode()
+        # self.enable_all_pins_toggle_mode()
 
-        for i in range(10, 64):
-            self.set_values_dac(i, map_value(i, 10, 63, 0, 4095))
+        self.set_values_dac(63, 4095)
 
-        self.write_all_values_dac()
+        # for i in range(10, 64):
+        #     self.set_values_dac(i, map_value(i, 10, 63, 0, 4095))
+        #
+        # self.write_all_values_dac()
 
     def update_all_channels(self) -> None:
         list_instructions: bytearray = bytearray([])
@@ -135,7 +137,7 @@ class DAC2688:
         list_instructions: bytearray = bytearray([])
 
         for i in range(self._no_daisy_chain):
-            list_instructions += (self._command_write_setting_channel_all(0, 0, 0, 0b01, 0b0100))
+            list_instructions += (self._command_write_setting_update_channel_all(0, 0, 0, 0b01, 0b0100))
 
         self._spi_protocol.write(list_instructions)
 

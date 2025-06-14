@@ -41,4 +41,4 @@ A Python 3.9 library to control the Linear Technology LTC2688 digital-to-analog 
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](raspberry-pi-5/LICENSE) file for details.

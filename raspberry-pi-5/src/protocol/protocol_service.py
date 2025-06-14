@@ -1,5 +1,6 @@
 from src.protocol.protocol_interface import ProtocolInterface
-from src.protocol.protocol_mock import ProtocolMock
+from src.protocol.protocols.protocol_ft232h import ProtocolFT232H
+from src.protocol.protocols.protocol_mock import ProtocolMock
 
 
 class Protocol:

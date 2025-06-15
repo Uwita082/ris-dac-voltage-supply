@@ -1,0 +1,3 @@
+C:/Users/Alexandru PC/Desktop/TU Delft/ris-dac-voltage-supply/raspberry-pi-5-c/cmake-build-debug/CMakeFiles/raspberry_pi_5_c.dir
+C:/Users/Alexandru PC/Desktop/TU Delft/ris-dac-voltage-supply/raspberry-pi-5-c/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/Alexandru PC/Desktop/TU Delft/ris-dac-voltage-supply/raspberry-pi-5-c/cmake-build-debug/CMakeFiles/rebuild_cache.dir

@@ -5,11 +5,29 @@
 #include <sys/ioctl.h>
 #include <linux/spi/spidev.h>
 #include <iostream>
+#include <chrono>
+#include <iomanip>
 
 #define DEVICE "/dev/spidev0.0"
 #define SPI_MODE SPI_MODE_0
 #define SPI_SPEED 25000000
 #define BITS_PER_WORD 8
+
+int send_spi_command(int fd, const std::vector<uint8_t>& cmd) {
+    struct spi_ioc_transfer tr{};
+    tr.tx_buf = reinterpret_cast<unsigned long>(cmd.data());
+    tr.rx_buf = 0;
+    tr.len = cmd.size();
+    tr.speed_hz = SPI_SPEED;
+    tr.bits_per_word = BITS_PER_WORD;
+    tr.delay_usecs = 0;
+
+    if (ioctl(fd, SPI_IOC_MESSAGE(1), &tr) < 1) {
+        perror("Failed to send SPI message");
+        return -1;
+    }
+    return 0;
+}
 
 int main() {
     int fd = open(DEVICE, O_RDWR);
@@ -37,22 +55,71 @@ int main() {
     };
 
     for (size_t i = 0; i < commands.size(); i++) {
-        spi_ioc_transfer tr{};
-        tr.tx_buf = reinterpret_cast<unsigned long>(commands[i].data());
-        tr.rx_buf = 0;
-        tr.len = commands[i].size();
-        tr.speed_hz = speed;
-        tr.bits_per_word = bits;
-        tr.delay_usecs = 0;
-
-        if (ioctl(fd, SPI_IOC_MESSAGE(1), &tr) < 1) {
-            std::cerr << "Failed to send SPI message #" << i + 1 << std::endl;
-            close(fd);
-            return 1;
-        }
-
+        send_spi_command(fd, commands[i]);
         std::cout << "Sent command #" << i + 1 << std::endl;
     }
+
+    // std::vector<uint8_t> cmd1 = {0x42, 0xFF, 0xF0, 0x00}; //Channel index 2 <> -15 V
+    // std::vector<uint8_t> cmd2 = {0x42, 0x00, 0x00, 0x00}; //Channel index 2 <> +15 V
+    //
+    // auto start = std::chrono::steady_clock::now();
+    //
+    // while (true) {
+    //     if (send_spi_command(fd, cmd1) < 0) break;
+    //     if (send_spi_command(fd, cmd2) < 0) break;
+    //
+    //     auto now = std::chrono::steady_clock::now();
+    //     if (std::chrono::duration_cast<std::chrono::seconds>(now - start).count() >= 60) {
+    //         std::cout << "Finished 60 seconds of sending." << std::endl;
+    //         break;
+    //     }
+    // }
+
+    std::vector<std::vector<uint8_t>> byte_vectors;
+
+    for (uint8_t i = 0; i < 16; ++i) {
+        std::vector<uint8_t> vec;
+        uint8_t first_byte = 0x40 | (i & 0x0F); // Most significant 4 bits = 0b0100
+        vec.push_back(first_byte);
+        vec.push_back(0xFF);
+        vec.push_back(0xF0);
+        vec.push_back(0x00);
+
+        byte_vectors.push_back(vec);
+    }
+
+    for (uint8_t i = 0; i < 16; ++i) {
+        std::vector<uint8_t> vec;
+        uint8_t first_byte = 0x40 | (i & 0x0F); // Most significant 4 bits = 0b0100
+        vec.push_back(first_byte);
+        vec.push_back(0x00);
+        vec.push_back(0x00);
+        vec.push_back(0x00);
+
+        byte_vectors.push_back(vec);
+    }
+
+    for (const auto& vec : byte_vectors) {
+        for (uint8_t byte : vec) {
+            std::cout << "0x" << std::hex << std::uppercase << std::setw(2)
+                      << std::setfill('0') << static_cast<int>(byte) << " ";
+        }
+        std::cout << "\n";
+    }
+
+    // auto start = std::chrono::steady_clock::now();
+    //
+    // while (true) {
+    //     for (size_t i = 0; i < byte_vectors.size(); i++) {
+    //         send_spi_command(fd, byte_vectors[i]);
+    //     }
+    //
+    //     auto now = std::chrono::steady_clock::now();
+    //     if (std::chrono::duration_cast<std::chrono::seconds>(now - start).count() >= 60) {
+    //         std::cout << "Finished 60 seconds of sending." << std::endl;
+    //         break;
+    //     }
+    // }
 
     close(fd);
     return 0;

@@ -59,55 +59,47 @@ int main() {
         std::cout << "Sent command #" << i + 1 << std::endl;
     }
 
-    // std::vector<uint8_t> cmd1 = {0x42, 0xFF, 0xF0, 0x00}; //Channel index 2 <> -15 V
-    // std::vector<uint8_t> cmd2 = {0x42, 0x00, 0x00, 0x00}; //Channel index 2 <> +15 V
+    std::vector<uint8_t> cmd1 = {0x42, 0xFF, 0xF0, 0x00}; //Channel index 2 <> -15 V
+    std::vector<uint8_t> cmd2 = {0x42, 0x00, 0x00, 0x00}; //Channel index 2 <> +15 V
+
+    auto start = std::chrono::steady_clock::now();
+
+    while (true) {
+        if (send_spi_command(fd, cmd1) < 0) break;
+        if (send_spi_command(fd, cmd2) < 0) break;
+
+        auto now = std::chrono::steady_clock::now();
+        if (std::chrono::duration_cast<std::chrono::seconds>(now - start).count() >= 60) {
+            std::cout << "Finished 60 seconds of sending." << std::endl;
+            break;
+        }
+    }
+
+    // std::vector<std::vector<uint8_t>> byte_vectors;
     //
-    // auto start = std::chrono::steady_clock::now();
-    //
-    // while (true) {
-    //     if (send_spi_command(fd, cmd1) < 0) break;
-    //     if (send_spi_command(fd, cmd2) < 0) break;
-    //
-    //     auto now = std::chrono::steady_clock::now();
-    //     if (std::chrono::duration_cast<std::chrono::seconds>(now - start).count() >= 60) {
-    //         std::cout << "Finished 60 seconds of sending." << std::endl;
-    //         break;
+    // for (uint8_t i = 0; i < 16; ++i) {
+    //     std::vector<uint8_t> vec;
+    //     for (uint8_t j = 0; j < 4; ++j) {
+    //         uint8_t first_byte = 0x40 | (i & 0x0F); // Most significant 4 bits = 0b0100
+    //         vec.push_back(first_byte);
+    //         vec.push_back(0xFF);
+    //         vec.push_back(0xF0);
+    //         vec.push_back(0x00);
     //     }
+    //     byte_vectors.push_back(vec);
     // }
-
-    std::vector<std::vector<uint8_t>> byte_vectors;
-
-    for (uint8_t i = 0; i < 16; ++i) {
-        std::vector<uint8_t> vec;
-        for (uint8_t j = 0; j < 4; ++j) {
-            uint8_t first_byte = 0x40 | (i & 0x0F); // Most significant 4 bits = 0b0100
-            vec.push_back(first_byte);
-            vec.push_back(0xFF);
-            vec.push_back(0xF0);
-            vec.push_back(0x00);
-        }
-        byte_vectors.push_back(vec);
-    }
-
-    for (uint8_t i = 0; i < 16; ++i) {
-        std::vector<uint8_t> vec;
-        for (uint8_t j = 0; j < 4; ++j) {
-            uint8_t first_byte = 0x40 | (i & 0x0F); // Most significant 4 bits = 0b0100
-            vec.push_back(first_byte);
-            vec.push_back(0x00);
-            vec.push_back(0x00);
-            vec.push_back(0x00);
-        }
-        byte_vectors.push_back(vec);
-    }
-
-    for (const auto& vec : byte_vectors) {
-        for (uint8_t byte : vec) {
-            std::cout << "0x" << std::hex << std::uppercase << std::setw(2)
-                      << std::setfill('0') << static_cast<int>(byte) << " ";
-        }
-        std::cout << "\n";
-    }
+    //
+    // for (uint8_t i = 0; i < 16; ++i) {
+    //     std::vector<uint8_t> vec;
+    //     for (uint8_t j = 0; j < 4; ++j) {
+    //         uint8_t first_byte = 0x40 | (i & 0x0F); // Most significant 4 bits = 0b0100
+    //         vec.push_back(first_byte);
+    //         vec.push_back(0x00);
+    //         vec.push_back(0x00);
+    //         vec.push_back(0x00);
+    //     }
+    //     byte_vectors.push_back(vec);
+    // }
 
     // auto start = std::chrono::steady_clock::now();
     //

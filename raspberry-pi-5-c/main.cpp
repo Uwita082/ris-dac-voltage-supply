@@ -51,7 +51,7 @@ int main() {
         {0x7C, 0x00, 0x00, 0x00, 0x7C, 0x00, 0x00, 0x00, 0x7C, 0x00, 0x00, 0x00, 0x7C, 0x00, 0x00, 0x00}, // Update all channels
         {0x72, 0x00, 0x00, 0x00, 0x72, 0x00, 0x00, 0x00, 0x72, 0x00, 0x00, 0x00, 0x72, 0x00, 0x00, 0x00}, // Select Register A all channels
         {0x7B, 0x00, 0x14, 0x00, 0x7B, 0x00, 0x14, 0x00, 0x7B, 0x00, 0x14, 0x00, 0x7B, 0x00, 0x14, 0x00}, // Set TGP pin for toggle mode and select span -+ 15 V
-        {0x74, 0xFF, 0xFF, 0x00, 0x74, 0xFF, 0xFF, 0x00, 0x74, 0xFF, 0xFF, 0x00, 0x74, 0xFF, 0xFF, 0x00} // Enable all channels toggle mode
+        // {0x74, 0xFF, 0xFF, 0x00, 0x74, 0xFF, 0xFF, 0x00, 0x74, 0xFF, 0xFF, 0x00, 0x74, 0xFF, 0xFF, 0x00} // Enable all channels toggle mode
     };
 
     for (size_t i = 0; i < commands.size(); i++) {
@@ -59,24 +59,24 @@ int main() {
         std::cout << "Sent command #" << i + 1 << std::endl;
     }
 
-    std::vector<uint8_t> cmd1 = {0x42, 0xFF, 0xF0, 0x00}; //Channel index 2 <> -15 V
-    send_spi_command(fd, cmd1);
-
     // std::vector<uint8_t> cmd1 = {0x42, 0xFF, 0xF0, 0x00}; //Channel index 2 <> -15 V
-    // std::vector<uint8_t> cmd2 = {0x42, 0x00, 0x00, 0x00}; //Channel index 2 <> +15 V
-    //
-    // auto start = std::chrono::steady_clock::now();
-    //
-    // while (true) {
-    //     if (send_spi_command(fd, cmd1) < 0) break;
-    //     if (send_spi_command(fd, cmd2) < 0) break;
-    //
-    //     auto now = std::chrono::steady_clock::now();
-    //     if (std::chrono::duration_cast<std::chrono::seconds>(now - start).count() >= 60) {
-    //         std::cout << "Finished 60 seconds of sending." << std::endl;
-    //         break;
-    //     }
-    // }
+    // send_spi_command(fd, cmd1);
+
+    std::vector<uint8_t> cmd1 = {0x42, 0xFF, 0xF0, 0x00}; //Channel index 2 <> -15 V
+    std::vector<uint8_t> cmd2 = {0x42, 0x00, 0x00, 0x00}; //Channel index 2 <> +15 V
+
+    auto start = std::chrono::steady_clock::now();
+
+    while (true) {
+        if (send_spi_command(fd, cmd1) < 0) break;
+        if (send_spi_command(fd, cmd2) < 0) break;
+
+        auto now = std::chrono::steady_clock::now();
+        if (std::chrono::duration_cast<std::chrono::seconds>(now - start).count() >= 60) {
+            std::cout << "Finished 60 seconds of sending." << std::endl;
+            break;
+        }
+    }
 
     // std::vector<std::vector<uint8_t>> byte_vectors;
     //

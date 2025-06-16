@@ -78,35 +78,31 @@ int main() {
         // }
     }
 
-    std::vector<std::vector<uint8_t>> byte_vectors;
-
-    for (uint8_t i = 0; i < 16; ++i) {
-        std::vector<uint8_t> vec;
-        for (uint8_t j = 0; j < 4; ++j) {
-            uint8_t first_byte = 0x40 | (i & 0x0F); // Most significant 4 bits = 0b0100
-            vec.push_back(first_byte);
-            vec.push_back(0xFF);
-            vec.push_back(0xF0);
-            vec.push_back(0x00);
-        }
-        byte_vectors.push_back(vec);
-    }
-
-    for (uint8_t i = 0; i < 16; ++i) {
-        std::vector<uint8_t> vec;
-        for (uint8_t j = 0; j < 4; ++j) {
-            uint8_t first_byte = 0x40 | (i & 0x0F); // Most significant 4 bits = 0b0100
-            vec.push_back(first_byte);
-            vec.push_back(0x00);
-            vec.push_back(0x00);
-            vec.push_back(0x00);
-        }
-        byte_vectors.push_back(vec);
-    }
-
-    for (size_t i = 0; i < byte_vectors.size(); i++) {
-        std::cout << byte_vectors[i] << std::endl;
-    }
+    // std::vector<std::vector<uint8_t>> byte_vectors;
+    //
+    // for (uint8_t i = 0; i < 16; ++i) {
+    //     std::vector<uint8_t> vec;
+    //     for (uint8_t j = 0; j < 4; ++j) {
+    //         uint8_t first_byte = 0x40 | (i & 0x0F); // Most significant 4 bits = 0b0100
+    //         vec.push_back(first_byte);
+    //         vec.push_back(0xFF);
+    //         vec.push_back(0xF0);
+    //         vec.push_back(0x00);
+    //     }
+    //     byte_vectors.push_back(vec);
+    // }
+    //
+    // for (uint8_t i = 0; i < 16; ++i) {
+    //     std::vector<uint8_t> vec;
+    //     for (uint8_t j = 0; j < 4; ++j) {
+    //         uint8_t first_byte = 0x40 | (i & 0x0F); // Most significant 4 bits = 0b0100
+    //         vec.push_back(first_byte);
+    //         vec.push_back(0x00);
+    //         vec.push_back(0x00);
+    //         vec.push_back(0x00);
+    //     }
+    //     byte_vectors.push_back(vec);
+    // }
 
     // auto start = std::chrono::steady_clock::now();
     //

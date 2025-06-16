@@ -5,6 +5,8 @@ import busio
 import digitalio
 import time
 
+dir(board)
+
 
 class ProtocolFT232H(ProtocolInterface):
     def __init__(self):
@@ -21,7 +23,7 @@ class ProtocolFT232H(ProtocolInterface):
         while not self.spi.try_lock():
             pass
 
-        self.spi.configure(baudrate=1000000, phase=0, polarity=0)
+        self.spi.configure(baudrate=25000000, phase=0, polarity=0)
 
     def close(self) -> None:
         if self.spi is not None:

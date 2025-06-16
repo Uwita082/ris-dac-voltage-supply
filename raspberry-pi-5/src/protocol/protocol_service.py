@@ -1,13 +1,12 @@
 from src.protocol.protocol_interface import ProtocolInterface
-from src.protocol.protocols.protocol_ft232h import ProtocolFT232H
-from src.protocol.protocols.protocol_mock import ProtocolMock
+from src.protocol.protocols.protocol_spidev import ProtocolSpiDev
 
 
 class Protocol:
     _protocol: ProtocolInterface
 
     def __init__(self):
-        self._protocol = ProtocolMock()
+        self._protocol = ProtocolSpiDev()
 
         self._protocol.open()
 

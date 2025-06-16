@@ -31,7 +31,12 @@ class DAC2688:
         self.set_settings_dac()
 
         # The channels now can be toggled
-        self.enable_all_pins_toggle_mode()
+        # self.enable_all_pins_toggle_mode()
+
+        while True:
+            self.set_values_dac(0, 0)
+            self.set_values_dac(0, 4095)
+            self.write_all_values_dac()
 
         # self.set_setting_dac(2, 0b0, 0b00, 0b000, 0b01, 0b0010)
         # self.set_values_dac(2, 1000)

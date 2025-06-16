@@ -57,6 +57,14 @@ int main() {
         }
     }
 
+    const std::array<uint8_t, 16> cmd1 = {0x40, 0xFF, 0xF0, 0x00}; //Channel index 2 <> -15 V
+    const std::array<uint8_t, 16> cmd2 = {0x40, 0x00, 0x00, 0x00}; //Channel index 2 <> +15 V
+
+    while (true) {
+        send_spi_command(fd, cmd1.data(), cmd1.size());
+        send_spi_command(fd, cmd2.data(), cmd2.size());
+    }
+
     close(fd);
     return 0;
 }

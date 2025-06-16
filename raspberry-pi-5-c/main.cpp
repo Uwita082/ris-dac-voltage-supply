@@ -62,21 +62,21 @@ int main() {
     // std::vector<uint8_t> cmd1 = {0x42, 0xFF, 0xF0, 0x00}; //Channel index 2 <> -15 V
     // send_spi_command(fd, cmd1);
 
-    // std::vector<uint8_t> cmd1 = {0x42, 0xFF, 0xF0, 0x00}; //Channel index 2 <> -15 V
-    // std::vector<uint8_t> cmd2 = {0x42, 0x00, 0x00, 0x00}; //Channel index 2 <> +15 V
-    //
-    // auto start = std::chrono::steady_clock::now();
-    //
-    // while (true) {
-    //     if (send_spi_command(fd, cmd1) < 0) break;
-    //     if (send_spi_command(fd, cmd2) < 0) break;
-    //
-    //     auto now = std::chrono::steady_clock::now();
-    //     if (std::chrono::duration_cast<std::chrono::seconds>(now - start).count() >= 60) {
-    //         std::cout << "Finished 60 seconds of sending." << std::endl;
-    //         break;
-    //     }
-    // }
+    std::vector<uint8_t> cmd1 = {0x42, 0xFF, 0xF0, 0x00}; //Channel index 2 <> -15 V
+    std::vector<uint8_t> cmd2 = {0x42, 0x00, 0x00, 0x00}; //Channel index 2 <> +15 V
+
+    auto start = std::chrono::steady_clock::now();
+
+    while (true) {
+        if (send_spi_command(fd, cmd1) < 0) break;
+        if (send_spi_command(fd, cmd2) < 0) break;
+
+        // auto now = std::chrono::steady_clock::now();
+        // if (std::chrono::duration_cast<std::chrono::seconds>(now - start).count() >= 60) {
+        //     std::cout << "Finished 60 seconds of sending." << std::endl;
+        //     break;
+        // }
+    }
 
     std::vector<std::vector<uint8_t>> byte_vectors;
 
@@ -104,19 +104,23 @@ int main() {
         byte_vectors.push_back(vec);
     }
 
-    auto start = std::chrono::steady_clock::now();
-
-    while (true) {
-        for (size_t i = 0; i < byte_vectors.size(); i++) {
-            send_spi_command(fd, byte_vectors[i]);
-        }
-
-        auto now = std::chrono::steady_clock::now();
-        if (std::chrono::duration_cast<std::chrono::seconds>(now - start).count() >= 60) {
-            std::cout << "Finished 60 seconds of sending." << std::endl;
-            break;
-        }
+    for (size_t i = 0; i < byte_vectors.size(); i++) {
+        std::cout << byte_vectors[i] << std::endl;
     }
+
+    // auto start = std::chrono::steady_clock::now();
+    //
+    // while (true) {
+    //     for (size_t i = 0; i < byte_vectors.size(); i++) {
+    //         send_spi_command(fd, byte_vectors[i]);
+    //     }
+    //
+    //     auto now = std::chrono::steady_clock::now();
+    //     if (std::chrono::duration_cast<std::chrono::seconds>(now - start).count() >= 60) {
+    //         std::cout << "Finished 60 seconds of sending." << std::endl;
+    //         break;
+    //     }
+    // }
 
     close(fd);
     return 0;

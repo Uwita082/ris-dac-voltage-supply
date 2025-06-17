@@ -171,6 +171,14 @@ class DAC2688:
 
         list_instructions: bytearray = bytearray([])
 
+        flag = False
+        for elem in list_write_commands:
+            if elem is not None:
+                flag = True
+
+        if not flag:
+            return None
+
         for elem in list_write_commands:
             if elem is None:
                 list_instructions += self._no_operation()

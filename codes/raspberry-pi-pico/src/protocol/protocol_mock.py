@@ -6,7 +6,7 @@ class ProtocolMock:
         pass
 
     def write(self, byte_list: bytearray)  -> None:
-        # print(byte_list)
+        print(byte_list)
         bits = ''.join(f'{byte:08b}' for byte in byte_list)
-        # print(bits)
-        # print("\n")
+        print(bits)
+        print("\n")

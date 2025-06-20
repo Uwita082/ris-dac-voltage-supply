@@ -5,7 +5,7 @@ class ProtocolSpiPico:
     def __init__(
         self,
         spi_id: int = 0,
-        baudrate: int = 30000000,
+        baudrate: int = 25000000,
         sck_pin: int = 2,
         mosi_pin: int = 3,
         miso_pin: int = 4,

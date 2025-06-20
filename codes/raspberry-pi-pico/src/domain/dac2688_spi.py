@@ -61,9 +61,9 @@ class DAC2688:
         #         self.set_values_dac(i, map_value(i, 0, 63, 0, 4095))
         #     self.write_all_values_dac()
         #
-        #     for i in range(64):
-        #         self.set_values_dac(i, map_value(i, 0, 63, 4095, 0))
-        #     self.write_all_values_dac()
+            for i in range(64):
+                self.set_values_dac(i, map_value(i, 0, 63, 4095, 0))
+            self.write_all_values_dac()
 
     def update_all_channels(self) -> None:
         list_instructions: bytearray = bytearray([])
@@ -154,23 +154,32 @@ class DAC2688:
             else:
                 self._spi_protocol.write(list_instructions)
 
-    def _retrieve_write_commands(self) -> bytearray | None:
-        list_write_commands: list[ChannelValue | None] = self._queue_write_commands.get_command_write()
+    def _retrieve_write_commands(self) -> Optional[bytearray]:
+        list_write_commands: List[Optional[ChannelValue]] = self._queue_write_commands.get_command_write()
+        list_write_commands.reverse()
 
         if len(list_write_commands) != self._no_daisy_chain:
             raise ValueError("List of write commands should have the length of the number of daisy chain devices.")
 
         list_instructions: bytearray = bytearray([])
 
-        for i in range(len(list_write_commands) - 1, -1, -1):
-            elem = list_write_commands[i]
+        flag = False
+        for elem in list_write_commands:
+            if elem is not None:
+                flag = True
+
+        if not flag:
+            return None
+
+        for elem in list_write_commands:
             if elem is None:
                 list_instructions += self._no_operation()
             else:
                 if isinstance(elem, ChannelWriteValue):
                     list_instructions += self._command_write_update_code_channel(elem.channel_index, elem.value_code)
                 elif isinstance(elem, ChannelSettingValue):
-                    list_instructions += self._command_write_setting_channel(elem.channel_index, elem.mode, elem.dit_ph, elem.dit_per, elem.td_sel, elem.span)
+                    list_instructions += self._command_write_setting_channel(elem.channel_index, elem.mode, elem.dit_ph,
+                                                                             elem.dit_per, elem.td_sel, elem.span)
                 else:
                     list_instructions += self._no_operation()
 

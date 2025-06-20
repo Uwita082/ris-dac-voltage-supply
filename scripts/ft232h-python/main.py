@@ -29,14 +29,36 @@ for command in commands:
 command1 = bytearray([0x40, 0xFF, 0xF0, 0x00, 0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00])
 command2 = bytearray([0x40, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00])
 
+command_minus = []
+for i in range(16):
+    command_minus.append(bytearray(
+        [0x40 + i, 0xFF, 0xF0, 0x00, 0x40 + i, 0xFF, 0xF0, 0x00, 0x40 + i, 0xFF, 0xF0, 0x00, 0x40 + i, 0xFF, 0xF0,
+         0x00]))
+
+command_plus = []
+for i in range(16):
+    command_plus.append(bytearray(
+        [0x40 + i, 0x00, 0x00, 0x00, 0x40 + i, 0x00, 0x00, 0x00, 0x40 + i, 0x00, 0x00, 0x00, 0x40 + i, 0x00, 0x00,
+         0x00]))
+
 def fast_loop():
+    # while True:
+    #     cs.value = False
+    #     spi.write(command1)
+    #     cs.value = True
+    #     cs.value = False
+    #     spi.write(command2)
+    #     cs.value = True
+
     while True:
-        cs.value = False
-        spi.write(command1)
-        cs.value = True
-        cs.value = False
-        spi.write(command2)
-        cs.value = True
+        for commandz in command_plus:
+            cs.value = False
+            spi.write(commandz)
+            cs.value = True
+        for commandz in command_minus:
+            cs.value = False
+            spi.write(commandz)
+            cs.value = True
 
 
 fast_loop()

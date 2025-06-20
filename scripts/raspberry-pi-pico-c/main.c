@@ -85,22 +85,48 @@ int main() {
     }
 
     // Test for best case - one instruction
-    while (true) {
-        send_command(commands1, sizeof(commands1));
-        sleep_us(12);
-        send_command(commands2, sizeof(commands2));
-        sleep_us(12);
-    }
+    // while (true) {
+    //     send_command(commands1, sizeof(commands1));
+    //     sleep_us(12);
+    //     send_command(commands2, sizeof(commands2));
+    //     sleep_us(12);
+    // }
 
     // Test for worse case - all instructions
-    // while (true) {
-    //     for (int i = 0; i < sizeof(command1) / sizeof(command1[0]); i++) {
-    //         send_command(command1[i], sizeof(command1[i]));
-    //     }
-    //     for (int i = 0; i < sizeof(command2) / sizeof(command2[0]); i++) {
-    //         send_command(command2[i], sizeof(command2[i]));
-    //     }
-    // }
+    while (true) {
+        send_command(command1[0], sizeof(command1[0]));
+        send_command(command1[1], sizeof(command1[1]));
+        send_command(command1[2], sizeof(command1[2]));
+        send_command(command1[3], sizeof(command1[3]));
+        send_command(command1[4], sizeof(command1[4]));
+        send_command(command1[5], sizeof(command1[5]));
+        send_command(command1[6], sizeof(command1[6]));
+        send_command(command1[7], sizeof(command1[7]));
+        send_command(command1[8], sizeof(command1[8]));
+        send_command(command1[9], sizeof(command1[9]));
+        send_command(command1[10], sizeof(command1[10]));
+        send_command(command1[11], sizeof(command1[11]));
+        send_command(command1[12], sizeof(command1[12]));
+        send_command(command1[13], sizeof(command1[13]));
+        send_command(command1[14], sizeof(command1[14]));
+        send_command(command1[15], sizeof(command1[15]));
+        send_command(command2[0], sizeof(command2[0]));
+        send_command(command2[1], sizeof(command2[1]));
+        send_command(command2[2], sizeof(command2[2]));
+        send_command(command2[3], sizeof(command2[3]));
+        send_command(command2[4], sizeof(command2[4]));
+        send_command(command2[5], sizeof(command2[5]));
+        send_command(command2[6], sizeof(command2[6]));
+        send_command(command2[7], sizeof(command2[7]));
+        send_command(command2[8], sizeof(command2[8]));
+        send_command(command2[9], sizeof(command2[9]));
+        send_command(command2[10], sizeof(command2[10]));
+        send_command(command2[11], sizeof(command2[11]));
+        send_command(command2[12], sizeof(command2[12]));
+        send_command(command2[13], sizeof(command2[13]));
+        send_command(command2[14], sizeof(command2[14]));
+        send_command(command2[15], sizeof(command2[15]));
+    }
 
     return 0;
 }

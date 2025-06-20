@@ -33,7 +33,8 @@ class DAC2688:
         self.set_settings_dac()
 
         # Test Analysis of signal quality
-        self.set_values_dac(0, 200)
+        self.enable_all_pins_toggle_mode()
+        self.set_values_dac(0, 2890)
         self.write_all_values_dac()
 
         # # Test Analysis of square wave

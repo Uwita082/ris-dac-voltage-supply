@@ -53,4 +53,4 @@ Low-level implementation in **Python** and **C** focused on performance:
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](raspberry-pi-5/LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.

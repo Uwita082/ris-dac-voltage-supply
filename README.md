@@ -5,8 +5,9 @@ This project implements a high-speed, scalable voltage supply control system usi
 For a complete explanation of the **design methodology**, **system behavior**, and **response time** analysis between the high-level and low-level implementations included in this repository, please refer to the accompanying research paper:
 
 📄[Read the Research Paper](https://example.com)
-
 _(Includes design choices, system analysis, and benchmarking results)_
+
+Author: Alexandru - Cristian Dumitrache
 
 ### Technical Requirements
 

@@ -1,0 +1,85 @@
+# -----------------------------
+# Python
+# -----------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pkl
+*.egg
+*.egg-info/
+dist/
+build/
+*.log
+*.sqlite3
+.env
+.venv/
+env/
+venv/
+pip-wheel-metadata/
+coverage/
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.tox/
+.ipynb_checkpoints
+
+# -----------------------------
+# C / C++
+# -----------------------------
+*.o
+*.obj
+*.so
+*.a
+*.out
+*.exe
+*.dll
+*.dylib
+*.lo
+*.la
+*.dep
+*.d
+*.map
+*.elf
+*.hex
+
+# -----------------------------
+# Build folders
+# -----------------------------
+build/
+cmake-build-*/
+Debug/
+Release/
+Makefile
+CMakeCache.txt
+CMakeFiles/
+compile_commands.json
+*.cmake
+
+# -----------------------------
+# PyCharm
+# -----------------------------
+.idea/
+*.iml
+
+# -----------------------------
+# Visual Studio Code
+# -----------------------------
+.vscode/
+
+# -----------------------------
+# CLion (JetBrains CMake-based IDE)
+# -----------------------------
+.clion/
+.idea/
+*.ipr
+*.iws
+*.iml
+
+# -----------------------------
+# OS-generated
+# -----------------------------
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini

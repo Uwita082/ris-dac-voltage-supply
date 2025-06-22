@@ -1,43 +1,54 @@
-# SPI Interface for LTC2688 DAC
+# Voltage Supply for Liquid Crystal Reconfigurable Intelligent Surface Biasing
 
-A Python 3.9 library to control the Linear Technology LTC2688 digital-to-analog converter via SPI. Supports daisy-chaining multiple LTC2688 devices, and can be used on Raspberry Pi (using `spidev`) or on Windows with import ignore for static analysis tools.
+This project implements a high-speed, scalable voltage supply control system using four LTC2688 DACs in daisy-chain SPI configuration. It is designed to provide precise voltage control for LC-RIS (Liquid Crystal Reconfigurable Intelligent Surface) applications, using modular hardware and software components.
 
----
+For a complete explanation of the **design methodology**, **system behavior**, and **response time** analysis between the high-level and low-level implementations included in this repository, please refer to the accompanying research paper:
 
-## Features
+📄[Read the Research Paper](https://example.com)
 
-* Send commands and data to one or multiple LTC2688 DACs in a daisy-chain configuration.
-* Simple `ProtocolInterface` abstraction for opening, closing, setting chip select, and writing data.
-* Out-of-the-box support for Raspberry Pi via `spidev`.
+_(Includes design choices, system analysis, and benchmarking results)_
 
----
+### Technical Requirements
 
-## Requirements
+## 📁 PCB
 
-* Python 3.9
-* On Raspberry Pi: `spidev` and `RPi.GPIO` libraries
+Contains all necessary files for PCB fabrication and component placement:
+- **Gerber files** for board manufacturing.
+- **Footprint schematics** for precise layout and reference.
+- **Bill of Materials (BOM)** for easy component sourcing and assembly.
 
----
+## 📁 Circuit Schematic
 
-## Installation
+Includes detailed circuit schematics showing:
+- The configuration of the four **LTC2688** DACs in **daisy-chain SPI mode**.
+- Power distribution components used for supply regulation.
+- Interfacing between the control system (MCU or PC) and the DACs via SPI.
+- Connection of an **oscillator** to the **toggle** pin of the LTC2688 to enable automatic switching between two voltage levels (Toggle A and Toggle B), allowing the generation of square waveforms in hardware.
 
-1. Clone this repository:
+## 📁 Simulations
 
-   ```bash
-   git clone https://github.com/yourusername/ltc2688-spi-interface.git
-   cd ltc2688-spi-interface
-   ```
+LTSpice simulation files used to:
+- Test and validate the on-board power supply performance.
+- Test and validate the on-board oscillator performance.
+- Evaluate design correctness under varying conditions.
+- Reduce trial-and-error in hardware prototyping.
 
-2. (Raspberry Pi only) Install dependencies:
+## 📁 Codes
 
-   ```bash
-   sudo apt update
-   sudo apt install python3-spidev python3-rpi.gpio
-   ```
+High-level **Python** codebase with object-oriented architecture:
+- Interfaces for Raspberry Pi Pico, Raspberry Pi 5, and PC with FT232H USB-to-SPI.
+- Strategy pattern to dynamically select the correct SPI implementation.
+- A queue-based system efficiently tracks and updates only the required DAC channels.
+- Designed for maintainability, flexibility, and easy scaling.
 
----
+## 📁 Script
 
-## Usage
+Low-level implementation in **Python** and **C** focused on performance:
+- Interfaces for Raspberry Pi Pico, Raspberry Pi 5, and PC with FT232H USB-to-SPI.
+- Direct raw-byte command sequences for updating DACs.
+- Minimal overhead to maximize SPI communication speed.
+- Intended for time-sensitive deployment scenarios.
+- Less readable, but significantly faster in response time (see paper for benchmarks).
 
 ## License
 

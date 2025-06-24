@@ -8,6 +8,7 @@ For a complete explanation of the **design methodology**, **system behavior**, a
 _(Includes design choices, system analysis, and benchmarking results)_
 
 Author: Alexandru - Cristian Dumitrache
+This work is part of the 2024/2025 Q4 [Research Project](https://github.com/TU-Delft-CSE/Research-Project) at [TU Delft](https://www.tudelft.nl/).
 
 ### Technical Requirements
 
